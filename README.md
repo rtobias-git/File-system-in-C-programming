@@ -1,106 +1,94 @@
-File System Implementation
+# 💾 Sistema de Arquivos `togabifs` em C
 
-Operating Systems 2
+![C](https://img.shields.io/badge/Linguagem-C-00599C?style=for-the-badge&logo=c&logoColor=white)
+![Sistemas Operacionais](https://img.shields.io/badge/Disciplina-Sistemas%20Operacionais%202-blueviolet?style=for-the-badge)
+![Multiplataforma](https://img.shields.io/badge/SO-Linux%20%7C%20Windows-lightgrey?style=for-the-badge)
 
-You are required to implement a shell in the C language (command interpreter) that supports the following commands:
+Implementação de um **sistema de arquivos simulado com persistência em disco** e um **interpretador de comandos (shell)** interativo desenvolvido em linguagem **C** para a disciplina de **Sistemas Operacionais 2** (IFSP Campus Presidente Epitácio).
 
-Create a directory (within the current directory):
-mkdir <directory_name>
+📄 A fundamentação teórica e as decisões de projeto estão documentadas no arquivo [Explicação da estrutura.pdf](Explicação%20da%20estrutura.pdf).
 
-Example:
-$ mkdir users
+---
 
-Change the current directory:
-cd <path>
+## 📸 Execução no Terminal
 
-Examples:
-$ cd /
-$ cd users
-$ cd ..
-$ cd /test
+Demonstração real dos comandos `stat`, `mkdir`, `ls`, `cd`, `pwd`, `touch`, `cat` e `exit` com atualização dinâmica dos blocos livres e tamanho dos arquivos:
 
-Display the current directory:
-pwd
+![Execução do Sistema de Arquivos togabifs no Terminal](images/execucao-terminal.png)
 
-Example:
-$ pwd
-/users
+---
 
-Create a file (in the current directory):
-touch <filename>
-<file_content>
-<CTRL+D>
+## 🧠 Arquitetura e Estruturas de Dados
 
-Example:
-$ touch test.txt
-But see here!
-<CTRL+D>
+Todo o armazenamento do sistema de arquivos é persistido na pasta `fs/`, organizada nos arquivos `superblock.dat`, `inodes.dat`, `freespace.dat` e nos blocos individuais em `fs/blocks/*.dat`.
 
-Display the content of a file (in the current directory):
-cat <filename>
+- **Superbloco (`gerir_superbloco.h` / `fs/superblock.dat`):**
+  - Identificação: `filesystem=togabifs`
+  - Tamanho do bloco: `128` bytes
+  - Tamanho da partição: `10240` bytes (`80` blocos no total)
+  - Ponteiro `next` indicando o próximo inode livre da lista encadeada.
+- **Diretórios com Árvore Binária de Busca (`estrutura_dados_diretorios.h`):**
+  - As entradas de cada diretório (`.`, `..`, arquivos e subdiretórios, com nomes de até 14 caracteres) são organizadas em uma **árvore binária ordenada alfabeticamente**, evitando buscas exaustivas e descartando metade dos caminhos a cada comparação.
+- **Gerenciamento de Inodes (`gerenciamento_inode.h`):**
+  - Utiliza uma **lista encadeada de inodes livres** (`prox_livre`), permitindo alocação e liberação em tempo constante a partir do índice salvo no superbloco. Cada inode suporta até **10 ponteiros diretos de blocos** (`blocos[10]`).
+- **Gerenciamento de Espaço Livre (`manipulacao_blocos.h` / `fs/freespace.dat`):**
+  - Implementado com **mapa de bits (bitmap)**, armazenando um bit por bloco (`0` para livre e `1` para ocupado), garantindo tamanho fixo em memória e verificação rápida de blocos disponíveis.
 
-Example:
-$ cat test.txt
-But see here!
+---
 
-List all files in the current directory:
-ls
+## 💻 Comandos Suportados no Shell
 
-Example:
-$ ls
-d - 1     .                   256
-d - 1     ..                  256
-f - 2     file.txt            20
-d - 3     folder              256
+| Comando | Descrição | Exemplo |
+| :--- | :--- | :--- |
+| `mkdir <nome>` | Cria um novo diretório no diretório atual | `mkdir projetos` |
+| `cd <caminho>` | Altera o diretório atual (suporta `/`, `..` e caminhos) | `cd projetos` |
+| `pwd` | Exibe o caminho do diretório atual | `pwd` |
+| `touch <arquivo>` | Cria um arquivo e lê seu conteúdo até `CTRL+D` | `touch readme.txt` |
+| `cat <arquivo>` | Exibe o conteúdo armazenado em um arquivo | `cat readme.txt` |
+| `ls` | Lista entradas do diretório com tipo (`d`/`f`), inode e tamanho | `ls` |
+| `rm <nome>` | Remove um arquivo ou diretório do diretório atual | `rm readme.txt` |
+| `stat` | Exibe espaço livre em bytes, blocos livres e tamanho do bloco | `stat` |
+| `exit` | Encerra o interpretador de comandos | `exit` |
 
-Explanation of attributes displayed:
-file type (d = directory | f = file) - inode number
-file name
-file size in Bytes
+---
 
-Remove a file or directory (from the current directory):
-rm <filename_or_directory>
+## 📁 Estrutura de Arquivos
 
-Example:
-$ rm file.txt
+```text
+File-system-in-C-programming/
+├── principal.c                     # Loop principal do shell e despacho de comandos
+├── estruturas.h                    # Definições de tp_entrada_diretorio, tp_no e tp_inode
+├── gerir_superbloco.h              # Leitura e atualização de fs/superblock.dat
+├── gerenciamento_inode.h           # Alocação, liberação e persistência de inodes
+├── estrutura_dados_diretorios.h    # Árvore binária de entradas de diretório
+├── manipulacao_blocos.h            # Mapa de bits e leitura/escrita em fs/blocks/
+├── funcoes.h                       # Implementação dos comandos do sistema de arquivos
+├── Explicação da estrutura.pdf     # Documento técnico detalhando as estruturas adotadas
+└── images/
+    └── execucao-terminal.png       # Captura da execução no terminal
+```
 
-Display the current status of the file system:
-stat
+---
 
-Example:
-$ stat
-Free space: 10240 Bytes
-Free blocks: 80 Blocks
-Block size: 128 Bytes
+## 🚀 Como Compilar e Executar
 
-These commands should perform data persistence in a file system developed by you. 
-This file system must use the file system of the operating system of your choice, meaning it should not directly access the hardware.
-All storage for your file system should reside within the fs (filesystem) directory, which must be organized as follows:
+O código é compatível com **Linux** e **Windows** (`#ifdef __linux__` / `#elif _WIN32`).
 
-fs/blocks (directory) or blocks.dat (file)
-fs/inodes.dat
-fs/freespace.dat
-fs/superblock.dat
+```bash
+# Clonar o repositório
+git clone https://github.com/rtobias-git/File-system-in-C-programming.git
+cd File-system-in-C-programming
 
-Considering the proposed organization, the superblock.dat file should store the file system characteristics (the quantities must be defined by you), as follows:
-filesystem=kleberfs
-blocksize=128
-partitionsize=10240
+# Compilar com GCC
+gcc principal.c -o togabifs
 
-Each data block can be represented as a file inside the blocks directory (e.g., block 20 would be the file 20.dat) and must support the data size defined in the blocksize attribute of the superblock.dat file.
-Another option is to represent the blocks as a single blocks.dat file, where every X bytes (X being the block size) store the data of a given block. The file system must create all data blocks (as free) before its first use and cannot exceed the block limit supported by the partition,
-which is defined in the partitionsize attribute of the superblock.dat file.
+# Executar (em Linux use ./togabifs; no Windows use togabifs.exe)
+./togabifs
+```
 
-Every directory must always contain the directories (.) and (..) to indicate the current directory and the parent directory, respectively.
-The directory entries should follow the format:
---------------------------------------------------------------
-| file_name (max. 14 bytes) | inode number (8 bits) |
---------------------------------------------------------------
+---
 
-Inodes must have the same size and be stored sequentially in the inodes.dat file.
-All inodes must be created (as free) before the first use of the file system (except the inode related to the root directory). 
-The free block management structure should be defined by you and stored in the freespace.dat file, where, upon the first use of the file system,
-all blocks should be marked as free (except for the block where the root directory is stored). It is important to note that all data stored in your file system must be accessible the next time the file system is used.
-The evaluation of the project will be done based on the implementation presentation in class and a document describing the details of the implemented file system.
-The document must also include details on how the directories were structured to provide good search performance for a file (do not use sequential or exhaustive search) and how the free space management structure was organized to find free blocks more quickly.
-It is important that these design choices for the file system project are justified and well-founded.
+## 👥 Autores
+
+- **Tobias Rafael da Silva Rosa** — [@rtobias-git](https://github.com/rtobias-git)
+- **Gabriel Pontel de Mori**
