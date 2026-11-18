@@ -1,42 +1,35 @@
-# 💾 Sistema de Arquivos `togabifs` em C
+# Sistema de Arquivos togabifs em C
 
 ![C](https://img.shields.io/badge/Linguagem-C-00599C?style=for-the-badge&logo=c&logoColor=white)
 ![Sistemas Operacionais](https://img.shields.io/badge/Disciplina-Sistemas%20Operacionais%202-blueviolet?style=for-the-badge)
 ![Multiplataforma](https://img.shields.io/badge/SO-Linux%20%7C%20Windows-lightgrey?style=for-the-badge)
 
-Implementação de um **sistema de arquivos simulado com persistência em disco** e um **interpretador de comandos (shell)** interativo desenvolvido em linguagem **C** para a disciplina de **Sistemas Operacionais 2** (IFSP Campus Presidente Epitácio).
+Implementação de um simulador de sistema de arquivos com persistência em disco e um shell interativo em linguagem C para a disciplina de Sistemas Operacionais 2 no IFSP (Campus Presidente Epitácio).
 
-📄 A fundamentação teórica e as decisões de projeto estão documentadas no arquivo [Explicação da estrutura.pdf](Explicação%20da%20estrutura.pdf).
+A explicação detalhada das estruturas de dados adotadas está disponível no documento [Explicação da estrutura.pdf](Explicação%20da%20estrutura.pdf).
 
 ---
 
-## 📸 Execução no Terminal
+## Execução no terminal
 
-Demonstração real dos comandos `stat`, `mkdir`, `ls`, `cd`, `pwd`, `touch`, `cat` e `exit` com atualização dinâmica dos blocos livres e tamanho dos arquivos:
+Demonstração dos comandos no terminal:
 
 ![Execução do Sistema de Arquivos togabifs no Terminal](images/execucao-terminal.png)
 
 ---
 
-## 🧠 Arquitetura e Estruturas de Dados
+## Estruturas de dados e funcionamento
 
-Todo o armazenamento do sistema de arquivos é persistido na pasta `fs/`, organizada nos arquivos `superblock.dat`, `inodes.dat`, `freespace.dat` e nos blocos individuais em `fs/blocks/*.dat`.
+Os dados do sistema de arquivos ficam salvos no diretório `fs/` nos arquivos `superblock.dat`, `inodes.dat`, `freespace.dat` e nos blocos em `fs/blocks/*.dat`.
 
-- **Superbloco (`gerir_superbloco.h` / `fs/superblock.dat`):**
-  - Identificação: `filesystem=togabifs`
-  - Tamanho do bloco: `128` bytes
-  - Tamanho da partição: `10240` bytes (`80` blocos no total)
-  - Ponteiro `next` indicando o próximo inode livre da lista encadeada.
-- **Diretórios com Árvore Binária de Busca (`estrutura_dados_diretorios.h`):**
-  - As entradas de cada diretório (`.`, `..`, arquivos e subdiretórios, com nomes de até 14 caracteres) são organizadas em uma **árvore binária ordenada alfabeticamente**, evitando buscas exaustivas e descartando metade dos caminhos a cada comparação.
-- **Gerenciamento de Inodes (`gerenciamento_inode.h`):**
-  - Utiliza uma **lista encadeada de inodes livres** (`prox_livre`), permitindo alocação e liberação em tempo constante a partir do índice salvo no superbloco. Cada inode suporta até **10 ponteiros diretos de blocos** (`blocos[10]`).
-- **Gerenciamento de Espaço Livre (`manipulacao_blocos.h` / `fs/freespace.dat`):**
-  - Implementado com **mapa de bits (bitmap)**, armazenando um bit por bloco (`0` para livre e `1` para ocupado), garantindo tamanho fixo em memória e verificação rápida de blocos disponíveis.
+- **Superbloco (`gerir_superbloco.h` e `fs/superblock.dat`):** guarda as informações gerais do sistema, como nome (`togabifs`), tamanho dos blocos (128 bytes), tamanho da partição (80 blocos) e o próximo inode livre.
+- **Diretórios em árvore binária (`estrutura_dados_diretorios.h`):** as entradas de diretório são organizadas em uma árvore binária de busca em ordem alfabética para agilizar a localização de arquivos e pastas.
+- **Gerenciamento de inodes (`gerenciamento_inode.h`):** mantém uma lista encadeada dos inodes disponíveis para alocação rápida. Cada inode tem capacidade para 10 blocos diretos.
+- **Mapa de bits de blocos livres (`manipulacao_blocos.h` e `fs/freespace.dat`):** bitmap que marca com 0 os blocos livres e com 1 os blocos ocupados.
 
 ---
 
-## 💻 Comandos Suportados no Shell
+## Comandos do shell
 
 | Comando | Descrição | Exemplo |
 | :--- | :--- | :--- |
@@ -52,7 +45,7 @@ Todo o armazenamento do sistema de arquivos é persistido na pasta `fs/`, organi
 
 ---
 
-## 📁 Estrutura de Arquivos
+## Estrutura de arquivos
 
 ```text
 File-system-in-C-programming/
@@ -70,9 +63,9 @@ File-system-in-C-programming/
 
 ---
 
-## 🚀 Como Compilar e Executar
+## Como compilar e executar
 
-O código é compatível com **Linux** e **Windows** (`#ifdef __linux__` / `#elif _WIN32`).
+O código roda tanto em Linux quanto em Windows (`#ifdef __linux__` / `#elif _WIN32`).
 
 ```bash
 # Clonar o repositório
@@ -82,13 +75,13 @@ cd File-system-in-C-programming
 # Compilar com GCC
 gcc principal.c -o togabifs
 
-# Executar (em Linux use ./togabifs; no Windows use togabifs.exe)
+# Executar (no Linux use ./togabifs; no Windows use togabifs.exe)
 ./togabifs
 ```
 
 ---
 
-## 👥 Autores
+## Autores
 
-- **Tobias Rafael da Silva Rosa** — [@rtobias-git](https://github.com/rtobias-git)
-- **Gabriel Pontel de Mori**
+- Tobias Rafael da Silva Rosa ([@rtobias-git](https://github.com/rtobias-git))
+- Gabriel Pontel de Mori
